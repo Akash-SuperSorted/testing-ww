@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timestamps</title>
+    <script src="https://unpkg.com/idb@5.0.4/build/iife/index-min.js"></script>
+</head>
+<body>
+    <div id="timestamps"></div>
+
+    <script>
+        // Register the service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(() => {
+                console.log("Service Worker Registered!");
+            });
+        }
+
+        // Function to get and display timestamps
+        async function displayTimestamps() {
+            const db = await idb.openDB('my-db', 1);
+            let tx = db.transaction('timestamps', 'readonly');
+            let store = tx.objectStore('timestamps');
+
+            let cursor = await store.openCursor(null, 'prev'); // 'prev' to get latest first
+            let container = document.getElementById('timestamps');
+            container.innerHTML = ''; // Clear the container
+
+            while (cursor) {
+                let div = document.createElement('div');
+                div.textContent = cursor.value;
+                container.appendChild(div);
+                cursor = await cursor.continue();
+            }
+        }
+
+        // Display timestamps every second
+        setInterval(displayTimestamps, 1000);
+    </script>
+</body>
+</html>
