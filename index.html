@@ -2,10 +2,16 @@
 <html>
 <head>
     <title>Timestamps</title>
+    <style>
+        #timestamps div {
+            margin-bottom: 5px;
+        }
+    </style>
     <script src="https://unpkg.com/idb@5.0.4/build/iife/index-min.js"></script>
 </head>
 <body>
     <div id="timestamps"></div>
+    <div id="count"></div>
 
     <script>
         // Register the service worker
@@ -23,13 +29,32 @@
 
             let cursor = await store.openCursor(null, 'prev'); // 'prev' to get latest first
             let container = document.getElementById('timestamps');
-            container.innerHTML = ''; // Clear the container
+            let countContainer = document.getElementById('count');
+            let timestamps = [];
+            let count = 0;
 
             while (cursor) {
-                let div = document.createElement('div');
-                div.textContent = cursor.value;
-                container.appendChild(div);
+                timestamps.push(cursor.value);
+                count++;
                 cursor = await cursor.continue();
+            }
+
+            // Render only when there are changes
+            if (container.childNodes.length !== timestamps.length) {
+                container.innerHTML = ''; // Clear the container
+
+                // Display only the latest 25 timestamps
+                timestamps.slice(0, 25).forEach(timestamp => {
+                    let div = document.createElement('div');
+                    let date = new Date(timestamp);
+
+                    // Format the date as a human-readable string
+                    div.textContent = date.toLocaleString();
+                    container.appendChild(div);
+                });
+
+                // Display the total count
+                countContainer.textContent = 'Total count: ' + count;
             }
         }
 
